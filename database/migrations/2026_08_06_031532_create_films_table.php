@@ -18,10 +18,17 @@ return new class extends Migration
             $table->integer('durasi');
             $table->decimal('rating', 2, 1);
             $table->text('deskripsi');
-            $table->year('tahun_rilis');
+            $table->date('tanggal_rilis');
             $table->text('poster');
             $table->foreignId('id_genre')->constrained('genres')->cascadeOnDelete();
             $table->string('sutradara');
+            $table->timestamps();
+        });
+
+        Schema::create('aktor_films', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('id_film')->constrained('films')->cascadeOnDelete();
+            $table->foreignId('id_aktor')->constrained('aktors')->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -32,5 +39,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('films');
+        Schema::dropIfExists('aktor_films');
     }
 };

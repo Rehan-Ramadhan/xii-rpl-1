@@ -12,9 +12,18 @@ class Film extends Model
         'durasi',
         'rating',
         'deskripsi',
-        'tahun_rilis',
+        'tanggal_rilis',
         'poster',
         'id_genre',
         'sutradara',
     ];
+
+    public function genre()
+    {
+        return $this->belongsTo(Genre::class, 'id_genre');
+    }
+    public function aktors()
+    {
+        return $this->belongsToMany(Aktor::class, 'aktor_films', 'id_film', 'id_aktor');
+    }
 }

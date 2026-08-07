@@ -12,7 +12,7 @@ class FilmController extends Controller
     public function index()
     {
         try {
-            $films = Film::latest()->get();
+            $films = Film::with(['genre', 'aktors'])->latest()->get();
             return response()->json([
                 'success' => true,
                 'message' => 'Data film berhasil diambil',
@@ -30,27 +30,32 @@ class FilmController extends Controller
     {
         try {
             $request->validate([
-                'judul'       => 'required|unique:films,judul',
-                'durasi'      => 'required',
-                'rating'      => 'required',
-                'deskripsi'   => 'required',
-                'tahun_rilis' => 'required',
-                'poster'      => 'required',
-                'id_genre'    => 'required',
-                'sutradara'   => 'required',
+                'judul'         => 'required|unique:films,judul',
+                'durasi'        => 'required',
+                'rating'        => 'required',
+                'deskripsi'     => 'required',
+                'tanggal_rilis' => 'required',
+                'poster'        => 'required',
+                'id_genre'      => 'required',
+                'sutradara'     => 'required',
+                'id_aktor'      => 'required|array',
+                'id_aktor.*'    => 'exists:aktors,id',
             ]);
 
             $film = new Film();
-            $film->judul       = $request->judul;
-            $film->slug        = Str::slug($request->judul) . Str::random(10);
-            $film->durasi      = $request->durasi;
-            $film->rating      = $request->rating;
-            $film->deskripsi   = $request->deskripsi;
-            $film->tahun_rilis = $request->tahun_rilis;
-            $film->poster      = $request->poster;
-            $film->id_genre    = $request->id_genre;
-            $film->sutradara   = $request->sutradara;
+            $film->judul            = $request->judul;
+            $film->slug             = Str::slug($request->judul) . Str::random(10);
+            $film->durasi           = $request->durasi;
+            $film->rating           = $request->rating;
+            $film->deskripsi        = $request->deskripsi;
+            $film->tanggal_rilis    = $request->tanggal_rilis;
+            $film->poster           = $request->poster;
+            $film->id_genre         = $request->id_genre;
+            $film->sutradara        = $request->sutradara;
             $film->save();
+
+            $film->aktors()->attach($request->id_aktor);
+            $film->load('aktors');
 
             return response()->json([
                 'success' => true,
@@ -81,10 +86,12 @@ class FilmController extends Controller
                 'durasi'      => 'required',
                 'rating'      => 'required',
                 'deskripsi'   => 'required',
-                'tahun_rilis' => 'required',
+                'tanggal_rilis' => 'required',
                 'poster'      => 'required',
                 'id_genre'    => 'required',
                 'sutradara'   => 'required',
+                'id_aktor'    => 'required|array',
+                'id_aktor.*'  => 'exists:aktors,id',
             ]);
 
             $film->judul       = $request->judul;
@@ -92,11 +99,14 @@ class FilmController extends Controller
             $film->durasi      = $request->durasi;
             $film->rating      = $request->rating;
             $film->deskripsi   = $request->deskripsi;
-            $film->tahun_rilis = $request->tahun_rilis;
+            $film->tanggal_rilis = $request->tanggal_rilis;
             $film->poster      = $request->poster;
             $film->id_genre    = $request->id_genre;
             $film->sutradara   = $request->sutradara;
             $film->save();
+
+            $film->aktors()->sync($request->id_aktor);
+            $film->load('aktors');
 
             return response()->json([
                 'success' => true,
@@ -122,6 +132,7 @@ class FilmController extends Controller
                 ], 404);
             }
 
+            $film->aktors()->detach();
             $film->delete();
 
             return response()->json([

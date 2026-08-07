@@ -7,4 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Genre extends Model
 {
     protected $fillable = ['nama_genre', 'slug',];
+
+    public function films()
+    {
+        return $this->hasMany(Film::class, 'id_genre');
+    }
 }

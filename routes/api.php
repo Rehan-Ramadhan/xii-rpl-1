@@ -6,41 +6,33 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\GenreController;
 use App\Http\Controllers\Api\AktorController;
 use App\Http\Controllers\Api\FilmController;
-use App\Http\Controllers\Api\AktorFilmController;
 
-route::post('register', [AuthController::class, 'register']);
+Route::post('register', [AuthController::class, 'register']);
 
-route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login']);
 
-route::middleware('auth:sanctum')->group(function () {
-    route::get('/profile', [AuthController::class, 'profile']);
-    route::post('/logout', [AuthController::class, 'logout']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/profile', [AuthController::class, 'profile']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 
-    // route genre
-    route::get('/genre', [GenreController::class, 'index']);
-    route::post('/genre', [GenreController::class, 'store']);
-    route::get('/genre/{id}', [GenreController::class, 'show']);
-    route::put('/genre/{id}', [GenreController::class, 'update']);
-    route::delete('/genre/{id}', [GenreController::class, 'destroy']);
+    // Route genre
+    Route::get('/genre', [GenreController::class, 'index']);
+    Route::post('/genre', [GenreController::class, 'store']);
+    Route::get('/genre/{id}', [GenreController::class, 'show']);
+    Route::put('/genre/{id}', [GenreController::class, 'update']);
+    Route::delete('/genre/{id}', [GenreController::class, 'destroy']);
 
-    // route aktor
-    route::get('/aktor', [AktorController::class, 'index']);
-    route::post('/aktor', [AktorController::class, 'store']);
-    route::get('/aktor/{id}', [AktorController::class, 'show']);
-    route::put('/aktor/{id}', [AktorController::class, 'update']);
-    route::delete('/aktor/{id}', [AktorController::class, 'destroy']);
+    // Route aktor
+    Route::get('/aktor', [AktorController::class, 'index']);
+    Route::post('/aktor', [AktorController::class, 'store']);
+    Route::get('/aktor/{id}', [AktorController::class, 'show']);
+    Route::put('/aktor/{id}', [AktorController::class, 'update']);
+    Route::delete('/aktor/{id}', [AktorController::class, 'destroy']);
 
-    // route film
-    route::get('/film', [FilmController::class, 'index']);
-    route::post('/film', [FilmController::class, 'store']);
-    route::get('/film/{id}', [FilmController::class, 'show']);
-    route::put('/film/{id}', [FilmController::class, 'update']);
-    route::delete('/film/{id}', [FilmController::class, 'destroy']);
-
-    // route aktor film
-    route::get('/aktor-film', [AktorFilmController::class, 'index']);
-    route::post('/aktor-film', [AktorFilmController::class, 'store']);
-    route::get('/aktor-film/{id}', [AktorFilmController::class, 'show']);
-    route::put('/aktor-film/{id}', [AktorFilmController::class, 'update']);
-    route::delete('/aktor-film/{id}', [AktorFilmController::class, 'destroy']);
+    // Route film
+    Route::get('/film', [FilmController::class, 'index']);
+    Route::post('/film', [FilmController::class, 'store']);
+    Route::get('/film/{id}', [FilmController::class, 'show']);
+    Route::put('/film/{id}', [FilmController::class, 'update']);
+    Route::delete('/film/{id}', [FilmController::class, 'destroy']);
 });
