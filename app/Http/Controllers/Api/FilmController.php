@@ -4,15 +4,32 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Film;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class FilmController extends Controller
 {
     public function index()
     {
         try {
-            $films = Film::with(['genre', 'aktors'])->latest()->get();
+            $films = DB::table('films')
+                ->join('genres', 'films.id_genre', '=', 'genres.id')
+                ->select(
+                    'films.*',
+                    'genres.nama_genre'
+                )
+                ->orderBy('films.created_at', 'desc')
+                ->get();
+
+            foreach ($films as $film) {
+                $film->aktors = DB::table('aktor_films')
+                    ->join('aktors', 'aktor_films.id_aktor', '=', 'aktors.id')
+                    ->where('aktor_films.id_film', $film->id)
+                    ->select('aktors.*')
+                    ->get();
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Data film berhasil diambil',
@@ -36,26 +53,46 @@ class FilmController extends Controller
                 'deskripsi'     => 'required',
                 'tanggal_rilis' => 'required',
                 'poster'        => 'required',
-                'id_genre'      => 'required',
+                'id_genre'      => 'required|exists:genres,id',
                 'sutradara'     => 'required',
                 'id_aktor'      => 'required|array',
                 'id_aktor.*'    => 'exists:aktors,id',
             ]);
 
-            $film = new Film();
-            $film->judul            = $request->judul;
-            $film->slug             = Str::slug($request->judul) . Str::random(10);
-            $film->durasi           = $request->durasi;
-            $film->rating           = $request->rating;
-            $film->deskripsi        = $request->deskripsi;
-            $film->tanggal_rilis    = $request->tanggal_rilis;
-            $film->poster           = $request->poster;
-            $film->id_genre         = $request->id_genre;
-            $film->sutradara        = $request->sutradara;
-            $film->save();
+            $now = Carbon::now();
+            $filmData = [
+                'judul'         => $request->judul,
+                'slug'          => Str::slug($request->judul) . Str::random(10),
+                'durasi'        => $request->durasi,
+                'rating'        => $request->rating,
+                'deskripsi'     => $request->deskripsi,
+                'tanggal_rilis' => $request->tanggal_rilis,
+                'poster'        => $request->poster,
+                'id_genre'      => $request->id_genre,
+                'sutradara'     => $request->sutradara,
+                'created_at'    => $now,
+                'updated_at'    => $now,
+            ];
 
-            $film->aktors()->attach($request->id_aktor);
-            $film->load('aktors');
+            $filmId = DB::table('films')->insertGetId($filmData);
+
+            $pivotData = [];
+            foreach ($request->id_aktor as $aktorId) {
+                $pivotData[] = [
+                    'id_film'    => $filmId,
+                    'id_aktor'   => $aktorId,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+            DB::table('aktor_films')->insert($pivotData);
+
+            $film = DB::table('films')->where('id', $filmId)->first();
+            $film->aktors = DB::table('aktor_films')
+                ->join('aktors', 'aktor_films.id_aktor', '=', 'aktors.id')
+                ->where('aktor_films.id_film', $filmId)
+                ->select('aktors.*')
+                ->get();
 
             return response()->json([
                 'success' => true,
@@ -73,7 +110,7 @@ class FilmController extends Controller
     public function update(Request $request, string $id)
     {
         try {
-            $film = Film::find($id);
+            $film = DB::table('films')->where('id', $id)->first();
             if (!$film) {
                 return response()->json([
                     'success' => false,
@@ -82,36 +119,58 @@ class FilmController extends Controller
             }
 
             $request->validate([
-                'judul'       => 'required|unique:films,judul,' . $id,
-                'durasi'      => 'required',
-                'rating'      => 'required',
-                'deskripsi'   => 'required',
+                'judul'         => 'required|unique:films,judul,' . $id,
+                'durasi'        => 'required',
+                'rating'        => 'required',
+                'deskripsi'     => 'required',
                 'tanggal_rilis' => 'required',
-                'poster'      => 'required',
-                'id_genre'    => 'required',
-                'sutradara'   => 'required',
-                'id_aktor'    => 'required|array',
-                'id_aktor.*'  => 'exists:aktors,id',
+                'poster'        => 'required',
+                'id_genre'      => 'required|exists:genres,id',
+                'sutradara'     => 'required',
+                'id_aktor'      => 'required|array',
+                'id_aktor.*'    => 'exists:aktors,id',
             ]);
 
-            $film->judul       = $request->judul;
-            $film->slug        = Str::slug($request->judul) . Str::random(10);
-            $film->durasi      = $request->durasi;
-            $film->rating      = $request->rating;
-            $film->deskripsi   = $request->deskripsi;
-            $film->tanggal_rilis = $request->tanggal_rilis;
-            $film->poster      = $request->poster;
-            $film->id_genre    = $request->id_genre;
-            $film->sutradara   = $request->sutradara;
-            $film->save();
+            $now = Carbon::now();
+            $updateData = [
+                'judul'         => $request->judul,
+                'slug'          => Str::slug($request->judul) . Str::random(10),
+                'durasi'        => $request->durasi,
+                'rating'        => $request->rating,
+                'deskripsi'     => $request->deskripsi,
+                'tanggal_rilis' => $request->tanggal_rilis,
+                'poster'        => $request->poster,
+                'id_genre'      => $request->id_genre,
+                'sutradara'     => $request->sutradara,
+                'updated_at'    => $now,
+            ];
 
-            $film->aktors()->sync($request->id_aktor);
-            $film->load('aktors');
+            DB::table('films')->where('id', $id)->update($updateData);
+
+            DB::table('aktor_films')->where('id_film', $id)->delete();
+
+            $pivotData = [];
+            foreach ($request->id_aktor as $aktorId) {
+                $pivotData[] = [
+                    'id_film'    => $id,
+                    'id_aktor'   => $aktorId,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+            DB::table('aktor_films')->insert($pivotData);
+
+            $updatedFilm = DB::table('films')->where('id', $id)->first();
+            $updatedFilm->aktors = DB::table('aktor_films')
+                ->join('aktors', 'aktor_films.id_aktor', '=', 'aktors.id')
+                ->where('aktor_films.id_film', $id)
+                ->select('aktors.*')
+                ->get();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Data film berhasil diupdate',
-                'data'    => $film
+                'data'    => $updatedFilm
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -124,7 +183,7 @@ class FilmController extends Controller
     public function destroy($id)
     {
         try {
-            $film = Film::find($id);
+            $film = DB::table('films')->where('id', $id)->first();
             if (!$film) {
                 return response()->json([
                     'success' => false,
@@ -132,8 +191,8 @@ class FilmController extends Controller
                 ], 404);
             }
 
-            $film->aktors()->detach();
-            $film->delete();
+            DB::table('aktor_films')->where('id_film', $id)->delete();
+            DB::table('films')->where('id', $id)->delete();
 
             return response()->json([
                 'success' => true,

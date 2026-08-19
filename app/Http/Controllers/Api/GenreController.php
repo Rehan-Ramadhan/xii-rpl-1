@@ -3,16 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Genre;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class GenreController extends Controller
 {
     public function index()
     {
         try {
-            $genres = Genre::latest()->get();
+            $genres = DB::table('genres')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Data genre berhasil diambil',
@@ -32,10 +36,18 @@ class GenreController extends Controller
             $request->validate([
                 'nama_genre' => 'required|unique:genres,nama_genre',
             ]);
-            $genre = new Genre();
-            $genre->nama_genre = $request->nama_genre;
-            $genre->slug = Str::slug($request->nama_genre) . Str::random(10);
-            $genre->save();
+
+            $now = Carbon::now();
+            $data = [
+                'nama_genre' => $request->nama_genre,
+                'slug'       => Str::slug($request->nama_genre) . Str::random(10),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+
+            $id = DB::table('genres')->insertGetId($data);
+
+            $genre = DB::table('genres')->where('id', $id)->first();
 
             return response()->json([
                 'success' => true,
@@ -53,7 +65,7 @@ class GenreController extends Controller
     public function update(Request $request, string $id)
     {
         try {
-            $genre = Genre::find($id);
+            $genre = DB::table('genres')->where('id', $id)->first();
             if (!$genre) {
                 return response()->json([
                     'success' => false,
@@ -64,14 +76,21 @@ class GenreController extends Controller
             $request->validate([
                 'nama_genre' => 'required|unique:genres,nama_genre,' . $id,
             ]);
-            $genre->nama_genre = $request->nama_genre;
-            $genre->slug = Str::slug($request->nama_genre) . Str::random(10);
-            $genre->save();
+
+            $updateData = [
+                'nama_genre' => $request->nama_genre,
+                'slug'       => Str::slug($request->nama_genre) . Str::random(10),
+                'updated_at' => Carbon::now(),
+            ];
+
+            DB::table('genres')->where('id', $id)->update($updateData);
+
+            $updatedGenre = DB::table('genres')->where('id', $id)->first();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Data genre berhasil diupdate',
-                'data'    => $genre
+                'data'    => $updatedGenre
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -84,8 +103,7 @@ class GenreController extends Controller
     public function destroy($id)
     {
         try {
-
-            $genre = Genre::find($id);
+            $genre = DB::table('genres')->where('id', $id)->first();
             if (!$genre) {
                 return response()->json([
                     'success' => false,
@@ -93,7 +111,7 @@ class GenreController extends Controller
                 ], 404);
             }
 
-            $genre->delete();
+            DB::table('genres')->where('id', $id)->delete();
 
             return response()->json([
                 'success' => true,

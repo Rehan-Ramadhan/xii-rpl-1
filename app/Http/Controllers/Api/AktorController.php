@@ -4,15 +4,19 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Aktor;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class AktorController extends Controller
 {
     public function index()
     {
         try {
-            $aktor = Aktor::latest()->get();
+            $aktor = DB::table('aktors')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Data Aktor berhasil diambil',
@@ -36,18 +40,25 @@ class AktorController extends Controller
                 'foto'       => 'required',
             ]);
 
-            $Aktor = new Aktor();
-            $Aktor->nama_aktor = $request->nama_aktor;
-            $Aktor->slug       = Str::slug($request->nama_aktor) . Str::random(10);
-            $Aktor->gender     = $request->gender;
-            $Aktor->umur       = $request->umur;
-            $Aktor->foto       = $request->foto;
-            $Aktor->save();
+            $now = Carbon::now();
+            $data = [
+                'nama_aktor' => $request->nama_aktor,
+                'slug'       => Str::slug($request->nama_aktor) . Str::random(10),
+                'gender'     => $request->gender,
+                'umur'       => $request->umur,
+                'foto'       => $request->foto,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+
+            $id = DB::table('aktors')->insertGetId($data);
+
+            $aktor = DB::table('aktors')->where('id', $id)->first();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Data Aktor berhasil disimpan',
-                'data'    => $Aktor
+                'data'    => $aktor
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -60,8 +71,8 @@ class AktorController extends Controller
     public function update(Request $request, string $id)
     {
         try {
-            $Aktor = Aktor::find($id);
-            if (!$Aktor) {
+            $aktor = DB::table('aktors')->where('id', $id)->first();
+            if (!$aktor) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Data Aktor tidak ditemukan'
@@ -75,17 +86,23 @@ class AktorController extends Controller
                 'foto'       => 'required',
             ]);
 
-            $Aktor->nama_aktor = $request->nama_aktor;
-            $Aktor->slug       = Str::slug($request->nama_aktor) . Str::random(10);
-            $Aktor->gender     = $request->gender;
-            $Aktor->umur       = $request->umur;
-            $Aktor->foto       = $request->foto;
-            $Aktor->save();
+            $updateData = [
+                'nama_aktor' => $request->nama_aktor,
+                'slug'       => Str::slug($request->nama_aktor) . Str::random(10),
+                'gender'     => $request->gender,
+                'umur'       => $request->umur,
+                'foto'       => $request->foto,
+                'updated_at' => Carbon::now(),
+            ];
+
+            DB::table('aktors')->where('id', $id)->update($updateData);
+
+            $updatedAktor = DB::table('aktors')->where('id', $id)->first();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Data Aktor berhasil diupdate',
-                'data'    => $Aktor
+                'data'    => $updatedAktor
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -98,20 +115,20 @@ class AktorController extends Controller
     public function destroy($id)
     {
         try {
-            $Aktor = Aktor::find($id);
-            if (!$Aktor) {
+            $aktor = DB::table('aktors')->where('id', $id)->first();
+            if (!$aktor) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Data Aktor tidak ditemukan'
                 ], 404);
             }
 
-            $Aktor->delete();
+            DB::table('aktors')->where('id', $id)->delete();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Data Aktor berhasil dihapus',
-                'data'    => $Aktor
+                'data'    => $aktor
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
