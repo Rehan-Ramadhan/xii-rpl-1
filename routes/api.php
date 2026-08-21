@@ -9,7 +9,6 @@ use App\Http\Controllers\Api\AktorController;
 use App\Http\Controllers\Api\FilmController;
 
 Route::post('register', [AuthController::class, 'register']);
-
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -39,14 +38,11 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::prefix('public')->group(function () {
-
-    Route::get('/films', [PublicController::class, 'films']);
-    Route::get('/films/{id}', [PublicController::class, 'detailFilm']);
-
-    Route::get('/genres', [PublicController::class, 'genres']);
+    Route::get('/films', [PublicController::class, 'index']);
+    Route::get('/films/{id}', [PublicController::class, 'show']);
+    Route::get('/genres', [PublicController::class, 'index']);
     Route::get('/genres/{id}/films', [PublicController::class, 'filmByGenre']);
-
-    Route::get('/actors', [PublicController::class, 'actors']);
+    Route::get('/actors', [PublicController::class, 'index']);
     Route::get('/actors/{id}/films', [PublicController::class, 'filmByActor']);
 
     Route::get('/search', [PublicController::class, 'search']);

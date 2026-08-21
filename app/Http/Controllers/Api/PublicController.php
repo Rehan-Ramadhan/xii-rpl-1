@@ -21,9 +21,9 @@ class PublicController extends Controller
                 ->get();
 
             foreach ($films as $film) {
-                $film->aktors = DB::table('aktor_film')
-                    ->join('aktors', 'aktor_film.aktor_id', '=', 'aktors.id')
-                    ->where('aktor_film.film_id', $film->id)
+                $film->aktors = DB::table('aktor_films')
+                    ->join('aktors', 'aktor_films.id_aktor', '=', 'aktors.id')
+                    ->where('aktor_films.id_film', $film->id)
                     ->select('aktors.*')
                     ->get();
             }
@@ -41,12 +41,12 @@ class PublicController extends Controller
         }
     }
 
-    public function show($slug)
+    public function show($id)
     {
         try {
             $film = DB::table('films')
                 ->join('genres', 'films.id_genre', '=', 'genres.id')
-                ->where('films.slug', $slug)
+                ->where('films.id', $id)
                 ->select(
                     'films.*',
                     'genres.nama_genre'
@@ -60,9 +60,9 @@ class PublicController extends Controller
                 ], 404);
             }
 
-            $film->aktors = DB::table('aktor_film')
-                ->join('aktors', 'aktor_film.aktor_id', '=', 'aktors.id')
-                ->where('aktor_film.film_id', $film->id)
+            $film->aktors = DB::table('aktor_films')
+                ->join('aktors', 'aktor_films.id_aktor', '=', 'aktors.id')
+                ->where('aktor_films.id_film', $film->id)
                 ->select('aktors.*')
                 ->get();
 
@@ -96,9 +96,9 @@ class PublicController extends Controller
                 ->get();
 
             foreach ($films as $film) {
-                $film->aktors = DB::table('aktor_film')
-                    ->join('aktors', 'aktor_film.aktor_id', '=', 'aktors.id')
-                    ->where('aktor_film.film_id', $film->id)
+                $film->aktors = DB::table('aktor_films')
+                    ->join('aktors', 'aktor_films.id_aktor', '=', 'aktors.id')
+                    ->where('aktor_films.id_film', $film->id)
                     ->select('aktors.*')
                     ->get();
             }
